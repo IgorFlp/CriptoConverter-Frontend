@@ -13,15 +13,10 @@ const StartLogin = (user, password) => {
     .post(API_BASEURL + "login", { user, password })
     .then((response) => {
       if (response.status === 200) {
-        alert(
-          "Login realizado com sucesso! id: " +
-            response.data.userId +
-            " nome: " +
-            response.data.userName
-        );
         //SUBSTITUIR POR SOLUÇÃO MAIS ROBUSTA
         localStorage.setItem("userID", response.data.userId);
         localStorage.setItem("userName", response.data.userName);
+        localStorage.setItem("userFavorites", response.data.userFavorites);
         window.location.href = "/home";
       } else {
         alert("Erro ao realizar login!");

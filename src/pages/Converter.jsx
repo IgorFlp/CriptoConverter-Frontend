@@ -1,8 +1,12 @@
-import React from "react";
+import React, { useEffect } from "react";
 import Header from "../components/Header";
 import Dropdown from "react-bootstrap/Dropdown";
 import DropdownButton from "react-bootstrap/DropdownButton";
 import { useState } from "react";
+import axios from "axios";
+
+const API_BASE_URL = "http://localhost:5000";
+const userID = localStorage.getItem("userID");
 
 const Converter = () => {
   const [selectedOption, setSelectedOption] = useState("Selecione uma moeda");
@@ -10,32 +14,115 @@ const Converter = () => {
   const [valor_reais, setValor_reais] = useState(0);
   const [valor_dolares, setValor_dolares] = useState(0);
   const [criptoInput, setCriptoInput] = useState(0);
+  const [currencies, setCurrencies] = useState([]);
+  const [userFavorites, setUserFavorites] = useState([]);
 
-  const handleSelect = (value) => {
-    setSelectedOption(value);
+  const isFavorite =
+    selectedOption && userFavorites.includes(selectedOption.id);
+
+  const handleSelect = (currency) => {
+    setSelectedOption(currency);
     setShowDropdown(false);
   };
-  const moneyConvertion = (input) => {
-    let valorEmReais = Math.floor(input * 5000).toLocaleString("pt-BR", {
-      style: "currency",
-      currency: "BRL",
+  const moneyConvertion = async (input) => {
+    //fazer um fetch pra pegar o valor da moeda por id atualizado sempre que apertar o botão, crypto flutua muito rapido
+
+    let currencyUsd = await axios.get(API_BASE_URL + "/currency", {
+      params: {
+        id: selectedOption.id,
+        currency: "usd",
+      },
     });
-    let valorEmDolares = Math.floor(input * 1000).toLocaleString("en-US", {
-      style: "currency",
-      currency: "USD",
+
+    let currencyBrl = await axios.get(API_BASE_URL + "/currency", {
+      params: {
+        id: selectedOption.id,
+        currency: "brl",
+      },
     });
-    setValor_reais(valorEmReais);
-    setValor_dolares(valorEmDolares);
+
+    let usdValue = (input * currencyUsd.data[0].current_price).toLocaleString(
+      "en-US",
+      {
+        style: "currency",
+        currency: "USD",
+      }
+    );
+    let brlValue = (input * currencyBrl.data[0].current_price).toLocaleString(
+      "pt-BR",
+      {
+        style: "currency",
+        currency: "BRL",
+      }
+    );
+    setValor_dolares(usdValue);
+    setValor_reais(brlValue);
+    const body = {
+      userID: userID,
+      newConversion: {
+        coinID: selectedOption.id,
+        amount: input,
+        brl: brlValue,
+        usd: usdValue,
+        timestamp: Date.now(),
+      },
+    };
+    const request = await axios.post(API_BASE_URL + "/conversionHistory", body);
+    if (request.status === 200) {
+      console.log("Conversão inserida no historico");
+    } else {
+      console.log(
+        "Erro na inserção no historico: " + request.status + " " + request.data
+      );
+    }
     //salvar no historico do usuario
   };
-  const favoriteCoin = (coin, status) => {
-    console.log(coin + "" + status);
-    //PUT /api/favorites
+  const PutUserFavorites = async (newFavorites) => {
+    try {
+      const response = await axios.put(API_BASE_URL + "/favoriteCoins", {
+        userID: userID,
+        favoriteCoins: newFavorites,
+      });
+      if (response.status === 200) {
+        localStorage.setItem("userFavorites", newFavorites);
+      } else {
+        console.log("Resposta inesperada", response.status + response.data);
+      }
+    } catch (error) {
+      if (error.response) {
+        console.log(
+          "Erro na resposta da api" +
+            error.response.status +
+            error.response.data
+        );
+      } else if (error.request) {
+        console.log(
+          "Erro na requisição da api" +
+            error.request.status +
+            error.request.data
+        );
+      } else {
+        console.error("Erro desconhecido:", error.message);
+      }
+    }
   };
-
-  let moedas = ["BTC", "ETH", "Doge"];
+  useEffect(() => {
+    const listCurrencies = () => {
+      const result = axios.get(API_BASE_URL + "/currency").then((response) => {
+        setCurrencies(response.data);
+      });
+    };
+    listCurrencies();
+    setSelectedOption({
+      id: "Selecione uma moeda",
+      name: "Selecione uma moeda",
+      image: "src/assets/react.svg",
+    });
+    setUserFavorites(localStorage.getItem("userFavorites").split(","));
+  }, []);
   return (
     <>
+      <Header />
       <div className="main-content">
         <div className="converter">
           <div className="row-1">
@@ -45,33 +132,39 @@ const Converter = () => {
               className="custom-dropdown"
             >
               <Dropdown.Toggle id="dropdown-basic" className="dropdown-toggle">
-                {selectedOption}
+                {selectedOption.name}
               </Dropdown.Toggle>
               <Dropdown.Menu>
-                {moedas.map((moeda) => (
+                {currencies.map((currency) => (
                   <Dropdown.Item
                     className="dropdown-item"
-                    key={moeda}
+                    key={currency.id}
                     as="button"
                     onClick={() => {
-                      handleSelect(moeda);
+                      handleSelect(currency);
                     }}
                   >
-                    {moeda}
+                    <i
+                      className="dropdown-coin-img"
+                      src={currency.image}
+                      alt=""
+                    />
+                    <label className="dropdown-coin-name">
+                      {currency.name}
+                    </label>
                   </Dropdown.Item>
                 ))}
               </Dropdown.Menu>
             </Dropdown>
 
             <i
-              className="bi bi-heart"
-              onClick={(e) => {
-                favoriteCoin(
-                  selectedOption,
-                  !e.target.classList.contains("bi-heart-fill")
-                );
-                e.target.classList.toggle("bi-heart-fill");
-                e.target.classList.toggle("bi-heart");
+              className={`bi ${isFavorite ? "bi-heart-fill" : "bi-heart"}`}
+              onClick={() => {
+                const newFavorites = isFavorite
+                  ? userFavorites.filter((id) => id !== selectedOption.id)
+                  : [...userFavorites, selectedOption.id];
+                setUserFavorites(newFavorites);
+                PutUserFavorites(newFavorites);
               }}
             ></i>
           </div>
@@ -103,11 +196,12 @@ const Converter = () => {
               <p id="valor-em-dolares">{valor_dolares}</p>
             </div>
           </div>
-          <div className="row-4">
-            <a href="https://www.coingecko.com/">
-              Price data by <img src="src\assets\CGAPI-Lockup-1.svg"></img>
-            </a>
-          </div>
+
+          <a className="coingecko-link" href="https://www.coingecko.com/">
+            <label>Price data by </label>
+
+            <img src="src\assets\CGAPI-Lockup-1.svg"></img>
+          </a>
         </div>
       </div>
     </>
