@@ -1,6 +1,9 @@
-body {
+html, body, #root {
+  height: 100%;
   margin: 0;
   padding: 0;
+}
+body {  
   background-color: #242424 !important;
   color: #fff !important;
 }
@@ -279,3 +282,130 @@ body {
   color: #a0a0a0;
   font-size: 0.9rem;
 } 
+.history-card-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.history-card {
+  display: flex;
+  align-items: center;
+  background-color: #2a2a2a;
+  border-radius: 12px;
+  padding: 1.5rem;
+  transition: transform 0.2s ease-in-out;
+  cursor: pointer;
+}
+
+.history-card:hover {
+  transform: translateX(10px);
+  background-color: #333333;
+}
+
+.login-page {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background: #232323;
+}
+
+/* Card do formulário */
+.login-container {
+  background: #003366;
+  padding: 2.5rem 2rem;
+  border-radius: 20px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.2);
+  width: 100%;
+  max-width: 430px;
+}
+
+/* Título */
+.login-title {
+  text-align: center;
+  color: #fff;
+  margin-bottom: 2rem;
+  font-size: 1.5rem;
+  font-weight: bold;
+  line-height: 1.1;
+}
+
+/* Formulário */
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* Inputs */
+.login-inputs-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.input-label {
+  color: #fff;
+  font-weight: 500;
+}
+
+.user-input,
+.pwd-input {
+  padding: 0.8rem;
+  border: 1.5px solid #bbb;
+  border-radius: 7px;
+  font-size: 1rem;
+  background: #222c3a;
+  color: #fff;
+  transition: border-color 0.3s;
+}
+
+.user-input:focus,
+.pwd-input:focus {
+  outline: none;
+  border-color: #00aaff;
+}
+
+/* Botões */
+.login-buttons {
+  display: flex;
+  flex-direction: row;
+  gap: 1rem;
+  margin-top: 1rem;
+  justify-content: center;
+}
+
+.login-button,
+.create-account-button {
+  padding: 0.8rem 1.5rem;
+  border: none;
+  border-radius: 7px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.login-button {
+  background: #00aaff;
+  color: #fff;
+}
+
+.login-button:hover {
+  background: #0077aa;
+}
+
+.create-account-button {
+  background: #222c3a;
+  color: #fff;
+  border: 1.5px solid #00aaff;
+}
+
+.create-account-button:hover {
+  background: #00aaff;
+  color: #fff;
+}
