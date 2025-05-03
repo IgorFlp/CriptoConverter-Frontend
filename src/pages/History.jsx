@@ -7,25 +7,55 @@ const API_BASE_URL = "http://localhost:5000";
 const userID = localStorage.getItem("userID");
 
 const History = () => {
-  const [historyTableData, setHistoryTableData] = useState([]);
+  const [historyData, setHistoryData] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
 
+  const formatDate = (timestamp) => {
+    const date = new Date(timestamp);
+
+        const pad = (n) => n.toString().padStart(2, "0");
+
+        const day = pad(date.getDate());
+        const month = pad(date.getMonth() + 1); // Mês começa do zero
+        const year = date.getFullYear();
+
+        const hours = pad(date.getHours());
+        const minutes = pad(date.getMinutes());
+        const seconds = pad(date.getSeconds());
+
+        let formated = `${day}/${month}/${year} - ${hours}:${minutes}:${seconds}` // Mês começa do zero
+        return formated;
+      }
   let headers = [
     { name: "ID da moeda", tag: "coinID" },
-    { name: "Nome da moeda", tag: "name" }, //currency list
+    { name: "Nome da moeda", tag: "coinName" }, //currency list
     { name: "Quant.", tag: "amount" },
     { name: "R$", tag: "brl" },
     { name: "USD", tag: "usd" },
     { name: "Horario", tag: "timestamp" },
   ];
   useEffect(() => {
+    axios.get(API_BASE_URL + "/me", { withCredentials: true })
+  .then(res => {
+    // res.data pode conter { userId, userName, ... }
+    //setUser(res.data);
+    console.log(res.data);
+  });
     const fetchConversionHistory = async () => {
-      const res = await axios.get(API_BASE_URL + "/historyTable", {
-        params: { userID: userID },
-      });
-      if (res) {
-        //console.log("history: " + JSON.stringify(res.data));
-
-        setHistoryTableData(res.data);
+      try{
+        setIsLoading(true);
+        setError(null);
+      const res = await axios.get(API_BASE_URL + "/conversionHistory", 
+        { withCredentials: true }
+      );
+      if (res) {    
+        setHistoryData(res.data);
+      }
+      } catch (err) {
+        setError("Erro ao carregar historico de conversões, tente novamente mais tarde.");
+      } finally {
+        setIsLoading(false);
       }
     };
     fetchConversionHistory();
@@ -34,32 +64,33 @@ const History = () => {
     <>
       <Header />
       <div className="main-content">
-        <div className="history">
-          <Table striped bordered hover variant="dark" className="">
-            <thead className="thead-dark">
-              <tr>
-                {headers.map((h) => {
-                  return (
-                    <th key={h.tag} scope="col">
-                      {h.name}
-                    </th>
-                  );
-                })}
-              </tr>
-            </thead>
-            <tbody>
-              {historyTableData.map((row, rowIndex) => (
-                <tr key={rowIndex}>
-                  {headers.map((h) => (
-                    <td key={h.tag} scope="row">
-                      {row[h.tag]}
-                    </td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </Table>
-        </div>
+      {error && <div className="error-message">{error}</div>}
+        {isLoading ? (
+          <div className="loading-message">Carregando historico de conversões...</div>
+        ) : (
+          <div className="history-card-container">
+            {historyData.length === 0 ? (
+              <div className="no-favorites-message">
+                Você ainda não fez nenhuma conversão, faça uma no conversor!
+              </div>
+            ) : (
+              historyData.map((history) => (
+                <div key={history.coindId} className="history-card">
+                  <div className="coin-logo">
+                    <img src={history.coinImage} alt={`${history.coinName} logo`} />
+                  </div>
+                  <div className="coin-info">
+                    <h3>{history.coinName}</h3>
+                    <p>Quantidade: {history.amount}</p>
+                    <p>Valor em BRL: {history.brl}</p>
+                    <p>Valor em USD: {history.usd}</p>
+                    <p>Horario: {formatDate(history.timestamp)}</p>                    
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        )}
       </div>
     </>
   );
