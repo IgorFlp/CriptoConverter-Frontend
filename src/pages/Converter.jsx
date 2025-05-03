@@ -5,7 +5,7 @@ import DropdownButton from "react-bootstrap/DropdownButton";
 import axios from "axios";
 
 const API_BASE_URL = "http://localhost:5000";
-const userID = localStorage.getItem("userID");
+
 const REQUEST_COOLDOWN = 2000; // 2 seconds cooldown between requests
 
 const Converter = () => {
@@ -20,7 +20,8 @@ const Converter = () => {
   const [error, setError] = useState(null);
   const lastRequestTime = useRef(0);
 
-  const isFavorite = selectedOption && userFavorites.includes(selectedOption.id);
+  //const isFavorite = selectedOption && Array.isArray(userFavorites) && userFavorites.some(fav => fav.id === selectedOption.id);
+  const isFavorite = selectedOption && userFavorites.some(fav => fav.id === selectedOption.id);
 
   const handleSelect = (currency) => {
     setSelectedOption(currency);
@@ -48,7 +49,17 @@ const Converter = () => {
       name: "Selecione uma moeda",
       image: "src/assets/react.svg",
     });
-    setUserFavorites(localStorage.getItem("userFavorites")?.split(",") || []);
+    const getFavorites = async () => {
+      try {
+        let res= await axios.get(API_BASE_URL + "/favoriteCoins", { withCredentials: true });
+        const storedFavorites = res.data;
+        setUserFavorites(storedFavorites ? storedFavorites : []);
+      } catch (err) {
+        setError("Falha ao carregar favoritos, tente novamente mais tarde.");
+        console.error("Error fetching favorites:", err);
+      }
+    }
+    getFavorites();
   }, [listCurrencies]);
 
   const moneyConvertion = async (input) => {
@@ -99,10 +110,11 @@ const Converter = () => {
       setValor_dolares(usdValue);
       setValor_reais(brlValue);
 
-      const body = {
-        userID: userID,
+      const body = {        
         newConversion: {
           coinID: selectedOption.id,
+          coinName: selectedOption.name,
+          coinImage: selectedOption.image,
           amount: input,
           brl: brlValue,
           usd: usdValue,
@@ -110,7 +122,7 @@ const Converter = () => {
         },
       };
 
-      const request = await axios.post(API_BASE_URL + "/conversionHistory", body);
+      const request = await axios.post(API_BASE_URL + "/conversionHistory", body, { withCredentials: true });
       if (request.status === 200) {
         console.log("Conversão inserida no historico");
       }
@@ -128,12 +140,11 @@ const Converter = () => {
 
   const PutUserFavorites = async (newFavorites) => {
     try {
-      const response = await axios.put(API_BASE_URL + "/favoriteCoins", {
-        userID: userID,
+      const response = await axios.put(API_BASE_URL + "/favoriteCoins", {        
         favoriteCoins: newFavorites,
-      });
+      }, { withCredentials: true });
       if (response.status === 200) {
-        localStorage.setItem("userFavorites", newFavorites);
+        localStorage.setItem("userFavorites", JSON.stringify(newFavorites));
       }
     } catch (err) {
       setError("Falha ao atualizar favoritos, tente novamente mais tarde.");
@@ -177,8 +188,8 @@ const Converter = () => {
               className={`bi ${isFavorite ? "bi-heart-fill" : "bi-heart"}`}
               onClick={() => {
                 const newFavorites = isFavorite
-                  ? userFavorites.filter((id) => id !== selectedOption.id)
-                  : [...userFavorites, selectedOption.id];
+                  ? userFavorites.filter((fav) => fav.id !== selectedOption.id)
+                  : [...userFavorites, {id: selectedOption.id, name: selectedOption.name, image: selectedOption.image}];
                 setUserFavorites(newFavorites);
                 PutUserFavorites(newFavorites);
               }}

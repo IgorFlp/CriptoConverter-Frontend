@@ -3,7 +3,7 @@ import Header from "../components/Header";
 import axios from "axios";
 
 const API_BASE_URL = "http://localhost:5000";
-const userID = localStorage.getItem("userID");
+
 
 const Favorites = () => {
   const [favoriteCoins, setFavoriteCoins] = useState([]);
@@ -16,8 +16,8 @@ const Favorites = () => {
         setIsLoading(true);
         setError(null);       
         
-        const response = await axios.get(`${API_BASE_URL}/favoriteCoinsPage`, {
-          params: { userID: userID },
+        const response = await axios.get(`${API_BASE_URL}/favoriteCoins`, {
+          withCredentials: true,
           headers: {
             'Accept': 'application/json',
             'Content-Type': 'application/json'
