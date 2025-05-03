@@ -5,30 +5,30 @@ import { useNavigate } from "react-router-dom";
 
 const API_BASEURL = "http://localhost:5000/";
 
-const StartLogin = (user, password) => {
+const PostRegister = (user, password) => {
   if (!user || !password) {
     alert("Preencha todos os campos!");
     return;
   }
 
   axios
-    .post(API_BASEURL + "login", { user: user, password: password },
-      { withCredentials: true })
+    .post(API_BASEURL + "register", { user, password })
     .then((response) => {
-      if (response.status === 200) {        
-        window.location.href = "/home";
-      } else {
-        alert("Erro ao realizar login!");
+      if (response.status === 200) {
+        alert("Conta criada com sucesso!");
+        window.location.href = "/";
+      }else{          
+        alert("Erro ao criar conta!" );
       }
-    })
-    .catch((error) => {
-      if (error.response) {
-        alert("Erro ao realizar login!");
-      } else if (error.request) {
-        alert("Erro ao realizar login!");
-      } else {
-        alert("Erro ao realizar login!");
       }
+    )
+    .catch((error) => {      
+      if (error.response && error.response.status === 409) {
+        alert("Esse nome de usuário já está em uso. Por favor, escolha outro.");
+      } else {
+        alert("Erro ao registrar. Tente novamente.");
+        console.error(error);
+      }      
     });
 };
 const Login = () => {
@@ -38,14 +38,14 @@ const Login = () => {
 
   const handleKeyPress = (e) => {
     if (e.key === 'Enter') {
-      StartLogin(user, password);
+      PostRegister(user, password);
     }
   };
 
   return (
     <div className="login-page">
       <div className="login-container">
-        <h3 className="login-title">Bem-vindo ao CriptoConverter</h3>
+        <h3 className="login-title">Crie sua conta</h3>
         <div className="login-form">
           <div className="login-inputs-row">
             <label className="input-label">Usuário</label>
@@ -70,15 +70,15 @@ const Login = () => {
           <div className="login-buttons">
             <button
               className="login-button"
-              onClick={() => StartLogin(user, password)}
+              onClick={() => PostRegister(user, password)}
             >
-              Entrar
+              Criar Conta
             </button>
             <button
               className="create-account-button"
-              onClick={() => navigate('/register')}
+              onClick={() => navigate('/')}
             >
-              Criar Conta
+              Voltar para Login
             </button>
           </div>
         </div>
