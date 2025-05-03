@@ -1,12 +1,12 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import Header from "../components/Header";
 import Dropdown from "react-bootstrap/Dropdown";
 import DropdownButton from "react-bootstrap/DropdownButton";
-import { useState } from "react";
 import axios from "axios";
 
 const API_BASE_URL = "http://localhost:5000";
 const userID = localStorage.getItem("userID");
+const REQUEST_COOLDOWN = 2000; // 2 seconds cooldown between requests
 
 const Converter = () => {
   const [selectedOption, setSelectedOption] = useState("Selecione uma moeda");
@@ -16,67 +16,116 @@ const Converter = () => {
   const [criptoInput, setCriptoInput] = useState(0);
   const [currencies, setCurrencies] = useState([]);
   const [userFavorites, setUserFavorites] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const lastRequestTime = useRef(0);
 
-  const isFavorite =
-    selectedOption && userFavorites.includes(selectedOption.id);
+  const isFavorite = selectedOption && userFavorites.includes(selectedOption.id);
 
   const handleSelect = (currency) => {
     setSelectedOption(currency);
     setShowDropdown(false);
   };
-  const moneyConvertion = async (input) => {
-    //fazer um fetch pra pegar o valor da moeda por id atualizado sempre que apertar o botão, crypto flutua muito rapido
 
-    let currencyUsd = await axios.get(API_BASE_URL + "/currency", {
-      params: {
-        id: selectedOption.id,
-        currency: "usd",
-      },
-    });
-
-    let currencyBrl = await axios.get(API_BASE_URL + "/currency", {
-      params: {
-        id: selectedOption.id,
-        currency: "brl",
-      },
-    });
-
-    let usdValue = (input * currencyUsd.data[0].current_price).toLocaleString(
-      "en-US",
-      {
-        style: "currency",
-        currency: "USD",
-      }
-    );
-    let brlValue = (input * currencyBrl.data[0].current_price).toLocaleString(
-      "pt-BR",
-      {
-        style: "currency",
-        currency: "BRL",
-      }
-    );
-    setValor_dolares(usdValue);
-    setValor_reais(brlValue);
-    const body = {
-      userID: userID,
-      newConversion: {
-        coinID: selectedOption.id,
-        amount: input,
-        brl: brlValue,
-        usd: usdValue,
-        timestamp: Date.now(),
-      },
-    };
-    const request = await axios.post(API_BASE_URL + "/conversionHistory", body);
-    if (request.status === 200) {
-      console.log("Conversão inserida no historico");
-    } else {
-      console.log(
-        "Erro na inserção no historico: " + request.status + " " + request.data
-      );
+  const listCurrencies = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const response = await axios.get(API_BASE_URL + "/currency");
+      setCurrencies(response.data);
+    } catch (err) {
+      setError("Falha ao carregar moedas, tente novamente mais tarde.");
+      console.error("Error fetching currencies:", err);
+    } finally {
+      setIsLoading(false);
     }
-    //salvar no historico do usuario
+  }, []);
+
+  useEffect(() => {
+    listCurrencies();
+    setSelectedOption({
+      id: "Selecione uma moeda",
+      name: "Selecione uma moeda",
+      image: "src/assets/react.svg",
+    });
+    setUserFavorites(localStorage.getItem("userFavorites")?.split(",") || []);
+  }, [listCurrencies]);
+
+  const moneyConvertion = async (input) => {
+    if (!selectedOption.id || selectedOption.id === "Selecione uma moeda") {
+      setError("Por favor, selecione uma moeda");
+      return;
+    }
+
+    const now = Date.now();
+    if (now - lastRequestTime.current < REQUEST_COOLDOWN) {
+      setError("Por favor, aguarde um momento antes de fazer outra conversão.");
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      setError(null);
+      lastRequestTime.current = now;
+
+      let currencyUsd = await axios.get(API_BASE_URL + "/currency", {
+        params: {
+          id: selectedOption.id,
+          currency: "usd",
+        },
+      });
+
+      let currencyBrl = await axios.get(API_BASE_URL + "/currency", {
+        params: {
+          id: selectedOption.id,
+          currency: "brl",
+        },
+      });
+
+      let usdValue = (input * currencyUsd.data[0].current_price).toLocaleString(
+        "en-US",
+        {
+          style: "currency",
+          currency: "USD",
+        }
+      );
+      let brlValue = (input * currencyBrl.data[0].current_price).toLocaleString(
+        "pt-BR",
+        {
+          style: "currency",
+          currency: "BRL",
+        }
+      );
+      setValor_dolares(usdValue);
+      setValor_reais(brlValue);
+
+      const body = {
+        userID: userID,
+        newConversion: {
+          coinID: selectedOption.id,
+          amount: input,
+          brl: brlValue,
+          usd: usdValue,
+          timestamp: Date.now(),
+        },
+      };
+
+      const request = await axios.post(API_BASE_URL + "/conversionHistory", body);
+      if (request.status === 200) {
+        console.log("Conversão inserida no historico");
+      }
+    } catch (err) {
+      if (err.response?.status === 429) {
+        setError("Muitas requisições. Por favor, aguarde um momento.");
+      } else {
+        setError("Falha ao converter moeda, tente novamente mais tarde.");
+      }
+      console.error("Error in conversion:", err);
+    } finally {
+      setIsLoading(false);
+    }
   };
+
   const PutUserFavorites = async (newFavorites) => {
     try {
       const response = await axios.put(API_BASE_URL + "/favoriteCoins", {
@@ -85,46 +134,19 @@ const Converter = () => {
       });
       if (response.status === 200) {
         localStorage.setItem("userFavorites", newFavorites);
-      } else {
-        console.log("Resposta inesperada", response.status + response.data);
       }
-    } catch (error) {
-      if (error.response) {
-        console.log(
-          "Erro na resposta da api" +
-            error.response.status +
-            error.response.data
-        );
-      } else if (error.request) {
-        console.log(
-          "Erro na requisição da api" +
-            error.request.status +
-            error.request.data
-        );
-      } else {
-        console.error("Erro desconhecido:", error.message);
-      }
+    } catch (err) {
+      setError("Falha ao atualizar favoritos, tente novamente mais tarde.");
+      console.error("Error updating favorites:", err);
     }
   };
-  useEffect(() => {
-    const listCurrencies = () => {
-      const result = axios.get(API_BASE_URL + "/currency").then((response) => {
-        setCurrencies(response.data);
-      });
-    };
-    listCurrencies();
-    setSelectedOption({
-      id: "Selecione uma moeda",
-      name: "Selecione uma moeda",
-      image: "src/assets/react.svg",
-    });
-    setUserFavorites(localStorage.getItem("userFavorites").split(","));
-  }, []);
+
   return (
     <>
       <Header />
       <div className="main-content">
         <div className="converter">
+          {error && <div className="error-message">{error}</div>}
           <div className="row-1">
             <Dropdown
               show={showDropdown}
@@ -144,14 +166,8 @@ const Converter = () => {
                       handleSelect(currency);
                     }}
                   >
-                    <i
-                      className="dropdown-coin-img"
-                      src={currency.image}
-                      alt=""
-                    />
-                    <label className="dropdown-coin-name">
-                      {currency.name}
-                    </label>
+                    <i className="dropdown-coin-img" src={currency.image} alt="" />
+                    <label className="dropdown-coin-name">{currency.name}</label>
                   </Dropdown.Item>
                 ))}
               </Dropdown.Menu>
@@ -182,8 +198,9 @@ const Converter = () => {
               onClick={() => {
                 moneyConvertion(criptoInput);
               }}
+              disabled={isLoading}
             >
-              Converter
+              {isLoading ? "Convertendo" : "Converter"}
             </button>
           </div>
           <div className="row-3">
@@ -199,8 +216,7 @@ const Converter = () => {
 
           <a className="coingecko-link" href="https://www.coingecko.com/">
             <label>Price data by </label>
-
-            <img src="src\assets\CGAPI-Lockup-1.svg"></img>
+            <img src="src\assets\CGAPI-Lockup-1.svg" alt="CoinGecko"></img>
           </a>
         </div>
       </div>
