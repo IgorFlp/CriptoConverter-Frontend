@@ -55,6 +55,13 @@ body {
   height: 3rem;
   border-right: solid 3px #0000003f;
   background-color: #00356ede;
+  a{
+    color: #fff;
+    text-decoration: none;
+    &:hover {
+      color: #007bff;
+    }
+  }
 }
 .main-content {
   padding-top: 2rem;

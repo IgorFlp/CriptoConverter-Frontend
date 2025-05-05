@@ -1,44 +1,40 @@
-import React from "react";
-import { useState } from "react";
-import axios from "axios";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
-const API_BASEURL = "http://localhost:5000/";
-
-const StartLogin = (user, password) => {
-  if (!user || !password) {
-    alert("Preencha todos os campos!");
-    return;
-  }
-
-  axios
-    .post(API_BASEURL + "login", { user: user, password: password },
-      { withCredentials: true })
-    .then((response) => {
-      if (response.status === 200) {        
-        window.location.href = "/home";
-      } else {
-        alert("Erro ao realizar login!");
-      }
-    })
-    .catch((error) => {
-      if (error.response) {
-        alert("Erro ao realizar login!");
-      } else if (error.request) {
-        alert("Erro ao realizar login!");
-      } else {
-        alert("Erro ao realizar login!");
-      }
-    });
-};
 const Login = () => {
   const [user, setUser] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
   const navigate = useNavigate();
 
-  const handleKeyPress = (e) => {
-    if (e.key === 'Enter') {
-      StartLogin(user, password);
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
+
+    try {
+      const response = await axios.post(
+        "http://localhost:5000/login",
+        { user, password },
+        {
+          withCredentials: true,
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (response.status === 200) {
+        // Verifica se o token está nos cookies
+        console.log("Response:", response);
+        console.log("Cookies:", document.cookie);
+
+        // Redireciona para a página inicial
+        navigate("/home");
+      }
+    } catch (error) {
+      console.error("Erro no login:", error);
+      setError(error.response?.data?.message || "Erro ao fazer login");
     }
   };
 
@@ -47,40 +43,42 @@ const Login = () => {
       <div className="login-container">
         <h3 className="login-title">Bem-vindo ao CriptoConverter</h3>
         <div className="login-form">
-          <div className="login-inputs-row">
-            <label className="input-label">Usuário</label>
-            <input
-              className="user-input"
-              value={user}
-              onChange={(e) => setUser(e.target.value)}
-              placeholder="Digite seu usuário"
-            />
-          </div>
-          <div className="login-inputs-row">
-            <label className="input-label">Senha</label>
-            <input
-              className="pwd-input"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              onKeyPress={handleKeyPress}
-              placeholder="Digite sua senha"
-            />
-          </div>
-          <div className="login-buttons">
-            <button
-              className="login-button"
-              onClick={() => StartLogin(user, password)}
-            >
-              Entrar
-            </button>
-            <button
-              className="create-account-button"
-              onClick={() => navigate('/register')}
-            >
-              Criar Conta
-            </button>
-          </div>
+          {error && <p style={{ color: "red" }}>{error}</p>}
+          <form onSubmit={handleSubmit}>
+            <div className="login-inputs-row">
+              <label className="input-label">Usuario</label>
+              <input
+                className="user-input"
+                type="text"
+                value={user}
+                onChange={(e) => setUser(e.target.value)}
+                placeholder="Digite seu usuario"
+                required
+              />
+            </div>
+            <div className="login-inputs-row">
+              <label className="input-label">Senha</label>
+              <input
+                className="pwd-input"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Digite sua senha"
+                required
+              />
+            </div>
+            <div className="login-buttons">
+              <button className="login-button" type="submit">
+                Entrar
+              </button>
+              <button
+                className="login-button create-account-button"
+                onClick={() => navigate("/register")}
+              >
+                Criar conta
+              </button>
+            </div>
+          </form>
         </div>
       </div>
     </div>

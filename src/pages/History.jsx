@@ -4,7 +4,7 @@ import Table from "react-bootstrap/Table";
 import axios from "axios";
 
 const API_BASE_URL = "http://localhost:5000";
-const userID = localStorage.getItem("userID");
+
 
 const History = () => {
   const [historyData, setHistoryData] = useState([]);
@@ -37,9 +37,7 @@ const History = () => {
   ];
   useEffect(() => {
     axios.get(API_BASE_URL + "/me", { withCredentials: true })
-  .then(res => {
-    // res.data pode conter { userId, userName, ... }
-    //setUser(res.data);
+  .then(res => {        
     console.log(res.data);
   });
     const fetchConversionHistory = async () => {

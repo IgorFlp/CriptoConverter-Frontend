@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import reactLogo from "./assets/react.svg";
 import viteLogo from "/vite.svg";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
@@ -11,7 +11,21 @@ import Favorites from "./pages/Favorites";
 import Header from "./components/Header";
 import Register from "./pages/Register";
 import ProtectedRoute from "./components/ProtectedRoute";
+import { logout } from "./services/authService";
+
 function App() {
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      logout();
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, []);
+
   return (
     <>
       <BrowserRouter>
