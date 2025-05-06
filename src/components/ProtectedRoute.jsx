@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Navigate } from "react-router-dom";
 import axios from "axios";
 
-const API_BASE_URL = "http://localhost:5000";
+const VITE_API_URL = import.meta.env.VITE_API_URL;
 
 const ProtectedRoute = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(null);
@@ -11,7 +11,9 @@ const ProtectedRoute = ({ children }) => {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const response = await axios.get(API_BASE_URL + "/me", { withCredentials: true });
+        const response = await axios.get(VITE_API_URL + "/me", {
+          withCredentials: true,
+        });
         if (response.status === 200) {
           setIsAuthenticated(true);
         }

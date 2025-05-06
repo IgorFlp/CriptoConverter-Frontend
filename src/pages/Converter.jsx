@@ -4,7 +4,7 @@ import Dropdown from "react-bootstrap/Dropdown";
 import DropdownButton from "react-bootstrap/DropdownButton";
 import axios from "axios";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL;
+const VITE_API_URL = import.meta.env.VITE_API_URL;
 
 const REQUEST_COOLDOWN = 2000; // 2 seconds cooldown between requests
 
@@ -33,7 +33,7 @@ const Converter = () => {
     try {
       setIsLoading(true);
       setError(null);
-      const response = await axios.get(API_BASE_URL + "/currency");
+      const response = await axios.get(VITE_API_URL + "/currency");
       setCurrencies(response.data);
     } catch (err) {
       setError("Falha ao carregar moedas, tente novamente mais tarde.");
@@ -52,7 +52,7 @@ const Converter = () => {
     });
     const getFavorites = async () => {
       try {
-        let res = await axios.get(API_BASE_URL + "/favoriteCoins", {
+        let res = await axios.get(VITE_API_URL + "/favoriteCoins", {
           withCredentials: true,
         });
         const storedFavorites = res.data;
@@ -82,14 +82,14 @@ const Converter = () => {
       setError(null);
       lastRequestTime.current = now;
 
-      let currencyUsd = await axios.get(API_BASE_URL + "/currency", {
+      let currencyUsd = await axios.get(VITE_API_URL + "/currency", {
         params: {
           id: selectedOption.id,
           currency: "usd",
         },
       });
 
-      let currencyBrl = await axios.get(API_BASE_URL + "/currency", {
+      let currencyBrl = await axios.get(VITE_API_URL + "/currency", {
         params: {
           id: selectedOption.id,
           currency: "brl",
@@ -126,7 +126,7 @@ const Converter = () => {
       };
 
       const request = await axios.post(
-        API_BASE_URL + "/conversionHistory",
+        VITE_API_URL + "/conversionHistory",
         body,
         { withCredentials: true }
       );
@@ -148,7 +148,7 @@ const Converter = () => {
   const PutUserFavorites = async (newFavorites) => {
     try {
       const response = await axios.put(
-        API_BASE_URL + "/favoriteCoins",
+        VITE_API_URL + "/favoriteCoins",
         {
           favoriteCoins: newFavorites,
         },

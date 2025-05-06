@@ -1,17 +1,21 @@
 import axios from "axios";
 
-const API_BASE_URL = "http://localhost:5000";
+const VITE_API_URL = import.meta.env.VITE_API_URL;
 
 export const logout = async () => {
-  try {   
+  try {
     // Chama o endpoint de logout no backend
-    await axios.post(`${API_BASE_URL}/logout`, {}, { 
-      withCredentials: true,
-      headers: {
-        'Content-Type': 'application/json'
+    await axios.post(
+      `${VITE_API_URL}/logout`,
+      {},
+      {
+        withCredentials: true,
+        headers: {
+          "Content-Type": "application/json",
+        },
       }
-    });
-    
+    );
+
     // Redireciona para a página inicial
     window.location.href = "/";
   } catch (error) {
@@ -22,9 +26,11 @@ export const logout = async () => {
 // Função para verificar se o usuário está autenticado
 export const checkAuth = async () => {
   try {
-    const response = await axios.get(`${API_BASE_URL}/me`, { withCredentials: true });
+    const response = await axios.get(`${VITE_API_URL}/me`, {
+      withCredentials: true,
+    });
     return response.status === 200;
   } catch (error) {
     return false;
   }
-}; 
+};

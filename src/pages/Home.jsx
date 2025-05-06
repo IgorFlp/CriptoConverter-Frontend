@@ -2,12 +2,12 @@ import React, { useEffect, useState } from "react";
 import Header from "../components/Header";
 import axios from "axios";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL;
+const VITE_API_URL = import.meta.env.VITE_API_URL;
 
 const Home = () => {
   const [user, setUser] = useState(null);
   useEffect(() => {
-    axios.get(API_BASE_URL + "/me", { withCredentials: true }).then((res) => {
+    axios.get(VITE_API_URL + "/me", { withCredentials: true }).then((res) => {
       setUser(res.data.userName);
       console.log(res.data);
     });

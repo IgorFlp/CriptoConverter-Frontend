@@ -3,7 +3,7 @@ import { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL;
+const VITE_API_URL = import.meta.env.VITE_API_URL;
 
 const PostRegister = (user, password) => {
   if (!user || !password) {
@@ -12,7 +12,7 @@ const PostRegister = (user, password) => {
   }
 
   axios
-    .post(API_BASE_URL + "register", { user, password })
+    .post(VITE_API_URL + "register", { user, password })
     .then((response) => {
       if (response.status === 200) {
         alert("Conta criada com sucesso!");

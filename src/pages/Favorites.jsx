@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import Header from "../components/Header";
 import axios from "axios";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL;
+const VITE_API_URL = import.meta.env.VITE_API_URL;
 
 const Favorites = () => {
   const [favoriteCoins, setFavoriteCoins] = useState([]);
@@ -15,7 +15,7 @@ const Favorites = () => {
         setIsLoading(true);
         setError(null);
 
-        const response = await axios.get(`${API_BASE_URL}/favoriteCoins`, {
+        const response = await axios.get(`${VITE_API_URL}/favoriteCoins`, {
           withCredentials: true,
           headers: {
             Accept: "application/json",

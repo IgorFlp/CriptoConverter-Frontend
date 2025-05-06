@@ -3,7 +3,7 @@ import Header from "../components/Header";
 import Table from "react-bootstrap/Table";
 import axios from "axios";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL;
+const VITE_API_URL = import.meta.env.VITE_API_URL;
 
 const History = () => {
   const [historyData, setHistoryData] = useState([]);
@@ -35,14 +35,14 @@ const History = () => {
     { name: "Horario", tag: "timestamp" },
   ];
   useEffect(() => {
-    axios.get(API_BASE_URL + "/me", { withCredentials: true }).then((res) => {
+    axios.get(VITE_API_URL + "/me", { withCredentials: true }).then((res) => {
       console.log(res.data);
     });
     const fetchConversionHistory = async () => {
       try {
         setIsLoading(true);
         setError(null);
-        const res = await axios.get(API_BASE_URL + "/conversionHistory", {
+        const res = await axios.get(VITE_API_URL + "/conversionHistory", {
           withCredentials: true,
         });
         if (res) {
