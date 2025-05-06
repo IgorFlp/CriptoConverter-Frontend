@@ -2,8 +2,7 @@ import React, { useState, useEffect } from "react";
 import Header from "../components/Header";
 import axios from "axios";
 
-const API_BASE_URL = "http://localhost:5000";
-
+const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 const Favorites = () => {
   const [favoriteCoins, setFavoriteCoins] = useState([]);
@@ -14,14 +13,14 @@ const Favorites = () => {
     const fetchFavoriteCoins = async () => {
       try {
         setIsLoading(true);
-        setError(null);       
-        
+        setError(null);
+
         const response = await axios.get(`${API_BASE_URL}/favoriteCoins`, {
           withCredentials: true,
           headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json'
-          }
+            Accept: "application/json",
+            "Content-Type": "application/json",
+          },
         });
 
         if (response.status === 200) {
@@ -31,13 +30,21 @@ const Favorites = () => {
         console.error("Erro ao buscar favoritos:", err);
         if (err.response) {
           // O servidor respondeu com um status de erro
-          setError(`Erro do servidor: ${err.response.status} - ${err.response.data?.message || 'Erro desconhecido'}`);
+          setError(
+            `Erro do servidor: ${err.response.status} - ${
+              err.response.data?.message || "Erro desconhecido"
+            }`
+          );
         } else if (err.request) {
           // A requisição foi feita mas não houve resposta
-          setError("Não foi possível conectar ao servidor. Verifique se o servidor está rodando.");
+          setError(
+            "Não foi possível conectar ao servidor. Verifique se o servidor está rodando."
+          );
         } else {
           // Algo aconteceu na configuração da requisição
-          setError("Erro ao configurar a requisição. Tente novamente mais tarde.");
+          setError(
+            "Erro ao configurar a requisição. Tente novamente mais tarde."
+          );
         }
       } finally {
         setIsLoading(false);
@@ -58,7 +65,8 @@ const Favorites = () => {
           <div className="favorite-coins-container">
             {favoriteCoins.length === 0 ? (
               <div className="no-favorites-message">
-                Você ainda não tem moedas favoritas. Adicione algumas no conversor!
+                Você ainda não tem moedas favoritas. Adicione algumas no
+                conversor!
               </div>
             ) : (
               favoriteCoins.map((coin) => (

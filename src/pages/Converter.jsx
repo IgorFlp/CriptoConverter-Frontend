@@ -4,7 +4,7 @@ import Dropdown from "react-bootstrap/Dropdown";
 import DropdownButton from "react-bootstrap/DropdownButton";
 import axios from "axios";
 
-const API_BASE_URL = "http://localhost:5000";
+const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 const REQUEST_COOLDOWN = 2000; // 2 seconds cooldown between requests
 
@@ -21,7 +21,8 @@ const Converter = () => {
   const lastRequestTime = useRef(0);
 
   //const isFavorite = selectedOption && Array.isArray(userFavorites) && userFavorites.some(fav => fav.id === selectedOption.id);
-  const isFavorite = selectedOption && userFavorites.some(fav => fav.id === selectedOption.id);
+  const isFavorite =
+    selectedOption && userFavorites.some((fav) => fav.id === selectedOption.id);
 
   const handleSelect = (currency) => {
     setSelectedOption(currency);
@@ -51,14 +52,16 @@ const Converter = () => {
     });
     const getFavorites = async () => {
       try {
-        let res= await axios.get(API_BASE_URL + "/favoriteCoins", { withCredentials: true });
+        let res = await axios.get(API_BASE_URL + "/favoriteCoins", {
+          withCredentials: true,
+        });
         const storedFavorites = res.data;
         setUserFavorites(storedFavorites ? storedFavorites : []);
       } catch (err) {
         setError("Falha ao carregar favoritos, tente novamente mais tarde.");
         console.error("Error fetching favorites:", err);
       }
-    }
+    };
     getFavorites();
   }, [listCurrencies]);
 
@@ -110,7 +113,7 @@ const Converter = () => {
       setValor_dolares(usdValue);
       setValor_reais(brlValue);
 
-      const body = {        
+      const body = {
         newConversion: {
           coinID: selectedOption.id,
           coinName: selectedOption.name,
@@ -122,7 +125,11 @@ const Converter = () => {
         },
       };
 
-      const request = await axios.post(API_BASE_URL + "/conversionHistory", body, { withCredentials: true });
+      const request = await axios.post(
+        API_BASE_URL + "/conversionHistory",
+        body,
+        { withCredentials: true }
+      );
       if (request.status === 200) {
         console.log("Conversão inserida no historico");
       }
@@ -140,9 +147,13 @@ const Converter = () => {
 
   const PutUserFavorites = async (newFavorites) => {
     try {
-      const response = await axios.put(API_BASE_URL + "/favoriteCoins", {        
-        favoriteCoins: newFavorites,
-      }, { withCredentials: true });
+      const response = await axios.put(
+        API_BASE_URL + "/favoriteCoins",
+        {
+          favoriteCoins: newFavorites,
+        },
+        { withCredentials: true }
+      );
       if (response.status === 200) {
         localStorage.setItem("userFavorites", JSON.stringify(newFavorites));
       }
@@ -177,8 +188,14 @@ const Converter = () => {
                       handleSelect(currency);
                     }}
                   >
-                    <i className="dropdown-coin-img" src={currency.image} alt="" />
-                    <label className="dropdown-coin-name">{currency.name}</label>
+                    <i
+                      className="dropdown-coin-img"
+                      src={currency.image}
+                      alt=""
+                    />
+                    <label className="dropdown-coin-name">
+                      {currency.name}
+                    </label>
                   </Dropdown.Item>
                 ))}
               </Dropdown.Menu>
@@ -189,7 +206,14 @@ const Converter = () => {
               onClick={() => {
                 const newFavorites = isFavorite
                   ? userFavorites.filter((fav) => fav.id !== selectedOption.id)
-                  : [...userFavorites, {id: selectedOption.id, name: selectedOption.name, image: selectedOption.image}];
+                  : [
+                      ...userFavorites,
+                      {
+                        id: selectedOption.id,
+                        name: selectedOption.name,
+                        image: selectedOption.image,
+                      },
+                    ];
                 setUserFavorites(newFavorites);
                 PutUserFavorites(newFavorites);
               }}

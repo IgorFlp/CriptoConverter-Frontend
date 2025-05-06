@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
+const API_BASE_URL = import.meta.env.VITE_API_URL;
+
 const Login = () => {
   const [user, setUser] = useState("");
   const [password, setPassword] = useState("");
@@ -11,10 +13,10 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
-
+    console.log(API_BASE_URL);
     try {
       const response = await axios.post(
-        "http://localhost:5000/login",
+        API_BASE_URL + "login",
         { user, password },
         {
           withCredentials: true,

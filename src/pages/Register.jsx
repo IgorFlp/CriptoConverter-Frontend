@@ -3,7 +3,7 @@ import { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
-const API_BASEURL = "http://localhost:5000/";
+const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 const PostRegister = (user, password) => {
   if (!user || !password) {
@@ -12,23 +12,22 @@ const PostRegister = (user, password) => {
   }
 
   axios
-    .post(API_BASEURL + "register", { user, password })
+    .post(API_BASE_URL + "register", { user, password })
     .then((response) => {
       if (response.status === 200) {
         alert("Conta criada com sucesso!");
         window.location.href = "/";
-      }else{          
-        alert("Erro ao criar conta!" );
+      } else {
+        alert("Erro ao criar conta!");
       }
-      }
-    )
-    .catch((error) => {      
+    })
+    .catch((error) => {
       if (error.response && error.response.status === 409) {
         alert("Esse nome de usuário já está em uso. Por favor, escolha outro.");
       } else {
         alert("Erro ao registrar. Tente novamente.");
         console.error(error);
-      }      
+      }
     });
 };
 const Login = () => {
@@ -37,7 +36,7 @@ const Login = () => {
   const navigate = useNavigate();
 
   const handleKeyPress = (e) => {
-    if (e.key === 'Enter') {
+    if (e.key === "Enter") {
       PostRegister(user, password);
     }
   };
@@ -76,7 +75,7 @@ const Login = () => {
             </button>
             <button
               className="create-account-button"
-              onClick={() => navigate('/')}
+              onClick={() => navigate("/")}
             >
               Voltar para Login
             </button>
