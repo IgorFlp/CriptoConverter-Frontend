@@ -12,7 +12,7 @@ const PostRegister = (user, password) => {
   }
 
   axios
-    .post(VITE_API_URL + "register", { user, password })
+    .post(VITE_API_URL + "/register", { user, password })
     .then((response) => {
       if (response.status === 200) {
         alert("Conta criada com sucesso!");

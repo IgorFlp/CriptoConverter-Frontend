@@ -16,7 +16,7 @@ const Login = () => {
     console.log(VITE_API_URL);
     try {
       const response = await axios.post(
-        VITE_API_URL + "login",
+        VITE_API_URL + "/login",
         { user, password },
         {
           withCredentials: true,
